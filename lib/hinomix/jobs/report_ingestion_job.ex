@@ -6,20 +6,26 @@ defmodule Hinomix.Jobs.ReportIngestionJob do
   use Oban.Worker, queue: :reports, max_attempts: 3
 
   alias Hinomix.ApiClient
+  alias Hinomix.Servers.ApiResponseCache
   alias Hinomix.ReportProcessor
+  alias Hinomix.Reports
+  alias Hinomix.Utils.DataCleaner
   require Logger
 
   @impl Oban.Worker
   def perform(%Oban.Job{args: args}) do
+    Reports.delete_reports()
     max_pages = Map.get(args, "max_pages", 7)
 
     Logger.info("Starting report ingestion for #{max_pages} pages")
 
     # Process each page of reports
-    results =
-      Enum.reduce(1..max_pages, [], fn page, acc ->
-        Logger.info("Fetching page #{page} of #{max_pages}")
+    Enum.reduce(1..max_pages, [], fn page, acc ->
+      Logger.info("Fetching page #{page} of #{max_pages}")
 
+      atomized_data = ApiResponseCache.get_state(page)
+
+      if is_nil(atomized_data) do
         case ApiClient.fetch_page(page) do
           {:ok, response} ->
             # Process each report in the page
@@ -31,7 +37,9 @@ defmodule Hinomix.Jobs.ReportIngestionJob do
                     {String.to_atom(key), value}
                   end
 
-                case ReportProcessor.process_report(normalize_params(atomized_data)) do
+                ApiResponseCache.update_state(page, DataCleaner.normalize(atomized_data))
+
+                case ReportProcessor.process_report(DataCleaner.normalize(atomized_data)) do
                   {:ok, report} ->
                     Logger.info("Processed report #{report.report_id}")
                     {:ok, report}
@@ -48,56 +56,23 @@ defmodule Hinomix.Jobs.ReportIngestionJob do
             Logger.error("Failed to fetch page #{page}: #{inspect(reason)}")
             acc
         end
-      end)
+      else
+        case ReportProcessor.process_report(atomized_data) do
+          {:ok, report} ->
+            Logger.info("Processed report #{report.report_id}")
+            {:ok, report}
 
-    successful =
-      Enum.count(results, fn
-        {:ok, _} -> true
-        _ -> false
-      end)
+          {:error, changeset} ->
+            Logger.error("Failed to process report: #{inspect(changeset.errors)}")
+            {:error, changeset}
+        end
+      end
+    end)
 
-    Logger.info("Report ingestion completed. Processed #{successful} reports successfully.")
-
-    # Schedule a discrepancy check job after ingestion
     %{"delay" => 10}
     |> Hinomix.Jobs.DiscrepancyCheckJob.new(schedule_in: 10)
     |> Oban.insert()
 
     :ok
   end
-
-  defp normalize_params(params) do
-    params
-    |> normalize_source()
-    |> normalize_campaign_id()
-    |> normalize_total_clicks()
-    |> normalize_total_revenue()
-  end
-
-  defp normalize_source(%{source: source} = params) do
-    source = source |> String.trim() |> String.downcase()
-    Map.put(params, :source, source)
-  end
-
-  defp normalize_campaign_id(%{campaign_id: campaign_id} = params) do
-    campaign_id = campaign_id |> String.trim() |> String.downcase()
-    Map.put(params, :campaign_id, campaign_id)
-  end
-
-  defp normalize_total_clicks(%{total_clicks: nil} = params),
-    do: Map.put(params, :total_clicks, 0)
-
-  defp normalize_total_clicks(%{total_clicks: total_clicks} = params)
-       when is_binary(total_clicks),
-       do: Map.put(params, :total_clicks, String.to_integer(total_clicks))
-
-  defp normalize_total_clicks(params), do: params
-
-  defp normalize_total_revenue(%{total_revenue: total_revenue} = params)
-       when is_binary(total_revenue) do
-    total_revenue = Decimal.new(Regex.replace(~r/^[^\d]+/, total_revenue, ""))
-    Map.put(params, :total_revenue, total_revenue)
-  end
-
-  defp normalize_total_revenue(params), do: params
 end
