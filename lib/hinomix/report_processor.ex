@@ -10,8 +10,6 @@ defmodule Hinomix.ReportProcessor do
 
   def process_report(report_data) do
     # Check if report already exists by source and campaign
-    IO.inspect(report_data)
-    IO.inspect("==========")
 
     case Repo.get_by(Report,
            source: report_data.source,

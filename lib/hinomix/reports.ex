@@ -105,6 +105,10 @@ defmodule Hinomix.Reports do
     Repo.delete(report)
   end
 
+  def delete_reports() do
+    Repo.delete_all(Report)
+  end
+
   @doc """
   Returns an `%Ecto.Changeset{}` for tracking report changes.
 

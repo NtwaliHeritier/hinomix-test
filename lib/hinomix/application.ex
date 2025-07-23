@@ -17,7 +17,8 @@ defmodule Hinomix.Application do
       # Start a worker by calling: Hinomix.Worker.start_link(arg)
       # {Hinomix.Worker, arg},
       # Start to serve requests, typically the last entry
-      HinomixWeb.Endpoint
+      HinomixWeb.Endpoint,
+      Hinomix.Servers.ApiResponseSupervisor
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

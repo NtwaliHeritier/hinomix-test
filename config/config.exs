@@ -30,7 +30,6 @@ config :hinomix, HinomixWeb.Endpoint,
 # at the `config/runtime.exs`.
 config :hinomix, Hinomix.Mailer, adapter: Swoosh.Adapters.Local
 
-
 # Configures Elixir's Logger
 config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",
@@ -42,9 +41,13 @@ config :phoenix, :json_library, Jason
 # Configure Oban
 config :hinomix, Oban,
   repo: Hinomix.Repo,
-  queues: [default: 10, reports: 5],
+  queues: [default: 10, reports: 5, data_cache: 5],
   plugins: [
-    Oban.Plugins.Pruner
+    Oban.Plugins.Pruner,
+    {Oban.Plugins.Cron,
+     crontab: [
+       {"* * * * *", Hinomix.Jobs.DataCacheJob}
+     ]}
   ]
 
 # Import environment specific config. This must remain at the bottom
