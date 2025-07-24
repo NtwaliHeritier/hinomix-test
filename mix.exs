@@ -47,7 +47,11 @@ defmodule Hinomix.MixProject do
       {:bandit, "~> 1.5"},
       {:oban, "~> 2.17"},
       {:tesla, "~> 1.8"},
-      {:hackney, "~> 1.20"}
+      {:hackney, "~> 1.20"},
+      {:phoenix_live_view, "~> 1.0"},
+      {:phoenix_html, "~> 4.2"},
+      {:phoenix_live_reload, "~> 1.6", only: :dev},
+      {:esbuild, "~> 0.10.0", runtime: Mix.env() == :dev}
     ]
   end
 
@@ -59,10 +63,13 @@ defmodule Hinomix.MixProject do
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
-      setup: ["deps.get", "ecto.setup"],
+      setup: ["deps.get", "ecto.setup", "assets.setup", "assets.build"],
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
-      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]
+      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
+      "assets.setup": ["esbuild.install --if-missing"],
+      "assets.build": ["esbuild default"],
+      "assets.deploy": ["esbuild default --minify", "phx.digest"]
     ]
   end
 end

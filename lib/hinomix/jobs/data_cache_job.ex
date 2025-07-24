@@ -11,7 +11,7 @@ defmodule Hinomix.Jobs.DataCacheJob do
   @impl Oban.Worker
   def perform(%Oban.Job{args: args}) do
     Reports.delete_reports()
-    max_pages = Map.get(args, "max_pages", 3)
+    max_pages = Map.get(args, "max_pages", 7)
 
     results =
       Enum.reduce(1..max_pages, [], fn page, acc ->
