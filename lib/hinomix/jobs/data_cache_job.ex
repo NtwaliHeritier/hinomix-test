@@ -3,14 +3,12 @@ defmodule Hinomix.Jobs.DataCacheJob do
 
   alias Hinomix.ApiClient
   alias Hinomix.Servers.ApiResponseCache
-  alias Hinomix.Reports
   alias Hinomix.Utils.DataCleaner
 
   require Logger
 
   @impl Oban.Worker
   def perform(%Oban.Job{args: args}) do
-    Reports.delete_reports()
     max_pages = Map.get(args, "max_pages", 7)
 
     results =
