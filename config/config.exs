@@ -19,7 +19,8 @@ config :hinomix, HinomixWeb.Endpoint,
     formats: [json: HinomixWeb.ErrorJSON],
     layout: false
   ],
-  pubsub_server: Hinomix.PubSub
+  pubsub_server: Hinomix.PubSub,
+  live_view: [signing_salt: "GFUxOUF0nD0JwQRE"]
 
 # Configures the mailer
 #
@@ -48,6 +49,15 @@ config :hinomix, Oban,
      crontab: [
        {"* * * * *", Hinomix.Jobs.DataCacheJob}
      ]}
+  ]
+
+config :esbuild,
+  version: "0.25.0",
+  default: [
+    args:
+      ~w(app.js --bundle --target=es2017 --outdir=../priv/static/assets --public-path=/assets),
+    cd: Path.expand("../assets", __DIR__),
+    env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
   ]
 
 # Import environment specific config. This must remain at the bottom
