@@ -47,7 +47,8 @@ config :hinomix, Oban,
     Oban.Plugins.Pruner,
     {Oban.Plugins.Cron,
      crontab: [
-       {"* * * * *", Hinomix.Jobs.DataCacheJob}
+       {"* * * * *", Hinomix.Jobs.DataCacheJob},
+       {"* * * * *", Hinomix.Jobs.ReportIngestionJob}
      ]}
   ]
 

@@ -24,6 +24,6 @@ defmodule HinomixWeb.Router do
   scope "/", HinomixWeb do
     pipe_through :browser
 
-    live "/reports", ReportsLive
+    live "/", ReportsLive
   end
 end
