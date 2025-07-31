@@ -1,20 +1,23 @@
 defmodule Hinomix.Servers.ApiResponseCache do
   use GenServer
 
-  def start_link(_) do
-    GenServer.start_link(__MODULE__, %{}, name: :report_server)
+  @name :report_server
+
+  def start_link(opts \\ []) do
+    name = Keyword.get(opts, :name, @name)
+    GenServer.start_link(__MODULE__, %{}, name: name)
   end
 
   def init(state) do
     {:ok, state}
   end
 
-  def update_state(page_number, data) do
-    GenServer.cast(:report_server, {:update, %{page_number: page_number, data: data}})
+  def update_state(page_number, data, name \\ @name) do
+    GenServer.cast(name, {:update, %{page_number: page_number, data: data}})
   end
 
-  def get_state(page_number) do
-    GenServer.call(:report_server, {:get, page_number})
+  def get_state(page_number, name \\ @name) do
+    GenServer.call(name, {:get, page_number})
   end
 
   def handle_cast({:update, %{page_number: page_number, data: data}}, state) do
