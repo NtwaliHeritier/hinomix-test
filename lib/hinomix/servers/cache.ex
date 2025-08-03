@@ -1,4 +1,4 @@
-defmodule Hinomix.Servers.ApiResponseCache do
+defmodule Hinomix.Servers.Cache do
   use GenServer
 
   @name :report_server

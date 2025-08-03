@@ -4,41 +4,48 @@ defmodule Hinomix.ReportProcessor do
   """
 
   alias Hinomix.Repo
+  alias Hinomix.Reports
   alias Hinomix.Reports.Report
   alias Hinomix.Clicks
+  alias Hinomix.Servers.Cache
   require Logger
 
-  def process_report(report_data) do
+  def process_report(report_data, page) do
     # Check if report already exists by source and campaign
+    resp =
+      case Repo.get_by(Report,
+             source: report_data.source,
+             campaign_id: report_data.campaign_id
+           ) do
+        nil ->
+          # Create new report
+          %Report{}
+          |> Report.changeset(Map.put(report_data, :processed_at, DateTime.utc_now()))
+          |> Repo.insert()
 
-    case Repo.get_by(Report,
-           source: report_data.source,
-           campaign_id: report_data.campaign_id
-         ) do
-      nil ->
-        # Create new report
-        %Report{}
-        |> Report.changeset(Map.put(report_data, :processed_at, DateTime.utc_now()))
-        |> Repo.insert()
+        existing_report ->
+          # Update existing report with new data
+          updated_revenue =
+            Decimal.add(
+              existing_report.total_revenue || Decimal.new(0),
+              report_data.total_revenue || Decimal.new(0)
+            )
 
-      existing_report ->
-        # Update existing report with new data
-        updated_revenue =
-          Decimal.add(
-            existing_report.total_revenue || Decimal.new(0),
-            report_data.total_revenue || Decimal.new(0)
-          )
+          updated_clicks = (existing_report.total_clicks || 0) + (report_data.total_clicks || 0)
 
-        updated_clicks = (existing_report.total_clicks || 0) + (report_data.total_clicks || 0)
+          existing_report
+          |> Report.changeset(%{
+            total_revenue: updated_revenue,
+            total_clicks: updated_clicks,
+            processed_at: DateTime.utc_now()
+          })
+          |> Repo.update()
+      end
 
-        existing_report
-        |> Report.changeset(%{
-          total_revenue: updated_revenue,
-          total_clicks: updated_clicks,
-          processed_at: DateTime.utc_now()
-        })
-        |> Repo.update()
-    end
+    reports = Reports.list_reports()
+
+    Cache.update_state(page, reports)
+    resp
   end
 
   def compare_with_clicks(report) do

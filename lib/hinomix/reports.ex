@@ -109,6 +109,10 @@ defmodule Hinomix.Reports do
     Repo.delete_all(Report)
   end
 
+  def get_reports_by_page(page) do
+    Hinomix.Servers.Cache.get_state(page)
+  end
+
   @doc """
   Returns an `%Ecto.Changeset{}` for tracking report changes.
 

@@ -18,13 +18,18 @@ defmodule Hinomix.Application do
       # {Hinomix.Worker, arg},
       # Start to serve requests, typically the last entry
       HinomixWeb.Endpoint,
-      Hinomix.Servers.ApiResponseSupervisor
+      Hinomix.Servers.Supervisor
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Hinomix.Supervisor]
-    Supervisor.start_link(children, opts)
+    result = Supervisor.start_link(children, opts)
+
+    Hinomix.Jobs.ReportIngestionJob.new(%{})
+    |> Oban.insert()
+
+    result
   end
 
   # Tell Phoenix to update the endpoint configuration

@@ -1,4 +1,4 @@
-defmodule Hinomix.Servers.ApiResponseSupervisor do
+defmodule Hinomix.Servers.Supervisor do
   use Supervisor
 
   def start_link(state \\ :ok) do
@@ -7,7 +7,7 @@ defmodule Hinomix.Servers.ApiResponseSupervisor do
 
   def init(_) do
     children = [
-      {Hinomix.Servers.ApiResponseCache, []}
+      {Hinomix.Servers.Cache, []}
     ]
 
     opts = [strategy: :one_for_one]
