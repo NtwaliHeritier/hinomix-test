@@ -1,4 +1,4 @@
-defmodule Hinomix.Servers.ApiResponseSupervisor do
+defmodule Hinomix.Servers.Supervisor do
   use Supervisor
 
   def start_link(state \\ :ok) do

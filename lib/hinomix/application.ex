@@ -18,7 +18,7 @@ defmodule Hinomix.Application do
       # {Hinomix.Worker, arg},
       # Start to serve requests, typically the last entry
       HinomixWeb.Endpoint,
-      Hinomix.Servers.ApiResponseSupervisor
+      Hinomix.Servers.Supervisor
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
