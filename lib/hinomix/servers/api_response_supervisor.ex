@@ -7,7 +7,7 @@ defmodule Hinomix.Servers.ApiResponseSupervisor do
 
   def init(_) do
     children = [
-      {Hinomix.Servers.ApiResponseCache, []}
+      {Hinomix.Servers.Cache, []}
     ]
 
     opts = [strategy: :one_for_one]
