@@ -158,6 +158,7 @@ defmodule Hinomix.Clicks do
 
       # Calculate totals in application code instead of database
       total_clicks = length(clicks)
+
       total_revenue =
         clicks
         |> Enum.reduce(Decimal.new(0), fn click, acc ->
@@ -178,15 +179,19 @@ defmodule Hinomix.Clicks do
   Gets a summary of clicks for a specific source and campaign.
   Used by ReportProcessor to compare with report data.
   """
-  def get_summary_for_campaign(source, campaign_id) do
+  def get_summary_for_campaign(source, campaign_id, report_date) do
     clicks =
       from(c in Click,
-        where: c.source == ^source and c.campaign_id == ^campaign_id,
+        where:
+          c.source == ^source and c.campaign_id == ^campaign_id and
+            c.clicked_at >= ^DateTime.new!(report_date, ~T[00:00:00], "Etc/UTC") and
+            c.clicked_at < ^DateTime.new!(Date.add(report_date, 1), ~T[00:00:00], "Etc/UTC"),
         select: c
       )
       |> Repo.all()
 
     total_clicks = length(clicks)
+
     total_revenue =
       clicks
       |> Enum.reduce(Decimal.new(0), fn click, acc ->

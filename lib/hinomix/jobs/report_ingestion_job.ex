@@ -12,15 +12,9 @@ defmodule Hinomix.Jobs.ReportIngestionJob do
   require Logger
 
   @impl Oban.Worker
-  def perform(%Oban.Job{args: args} = job) do
+  def perform(%Oban.Job{args: args}) do
     Reports.delete_reports()
     max_pages = Map.get(args, "max_pages", 7)
-
-    IO.inspect("Running the job========================")
-    IO.inspect(DateTime.utc_now(), label: "Job run")
-    IO.inspect(job.attempt, label: "Attempt")
-    IO.inspect(job)
-    IO.inspect("Running the job========================")
 
     Logger.info("Starting report ingestion for #{max_pages} pages")
 

@@ -15,7 +15,8 @@ defmodule Hinomix.ReportProcessor do
     resp =
       case Repo.get_by(Report,
              source: report_data.source,
-             campaign_id: report_data.campaign_id
+             campaign_id: report_data.campaign_id,
+             report_date: report_data.report_date
            ) do
         nil ->
           # Create new report
@@ -50,7 +51,8 @@ defmodule Hinomix.ReportProcessor do
 
   def compare_with_clicks(report) do
     # Get actual clicks for the same source and campaign
-    click_summary = Clicks.get_summary_for_campaign(report.source, report.campaign_id)
+    click_summary =
+      Clicks.get_summary_for_campaign(report.source, report.campaign_id, report.report_date)
 
     %{
       report_id: report.id,

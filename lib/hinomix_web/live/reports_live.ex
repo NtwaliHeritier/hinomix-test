@@ -7,10 +7,9 @@ defmodule HinomixWeb.ReportsLive do
 
   def mount(_params, _session, socket) do
     reports = Reports.get_reports_by_page(@default_page_number)
-    Process.send_after(self(), :refresh, :timer.seconds(1))
 
     if connected?(socket) do
-      Process.send_after(self(), :refresh, :timer.seconds(1))
+      Process.send_after(self(), {:refresh, @default_page_number}, :timer.seconds(1))
     end
 
     {:ok, assign(socket, %{reports: reports, page_number: @default_page_number}),
@@ -61,16 +60,27 @@ defmodule HinomixWeb.ReportsLive do
   end
 
   def handle_event("generate-report", %{"page-number" => page_number}, socket) do
-    reports = Reports.get_reports_by_page(page_number)
+    reports =
+      case Reports.get_reports_by_page(page_number) do
+        nil ->
+          Hinomix.Jobs.ReportIngestionJob.new(%{"max_pages" => String.to_integer(page_number)})
+          |> Oban.insert()
+
+          Process.send_after(self(), {:refresh, page_number}, :timer.seconds(1))
+          nil
+
+        reports ->
+          reports
+      end
 
     {:noreply, socket |> assign(%{reports: reports, page_number: page_number})}
   end
 
-  def handle_info(:refresh, socket) do
-    reports = Reports.get_reports_by_page(@default_page_number)
+  def handle_info({:refresh, page_number}, socket) do
+    reports = Reports.get_reports_by_page(page_number)
 
     if is_nil(reports) do
-      Process.send_after(self(), :refresh, :timer.seconds(1))
+      Process.send_after(self(), {:refresh, page_number}, :timer.seconds(1))
     end
 
     {:noreply, socket |> assign(:reports, reports)}
