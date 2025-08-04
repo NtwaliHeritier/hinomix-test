@@ -63,7 +63,7 @@ defmodule HinomixWeb.ReportsLive do
   def handle_event("generate-report", %{"page-number" => page_number}, socket) do
     reports = Reports.get_reports_by_page(page_number)
 
-    {:noreply, socket |> assign(:reports, reports)}
+    {:noreply, socket |> assign(%{reports: reports, page_number: page_number})}
   end
 
   def handle_info(:refresh, socket) do

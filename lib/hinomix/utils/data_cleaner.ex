@@ -28,7 +28,12 @@ defmodule Hinomix.Utils.DataCleaner do
 
   defp normalize_total_revenue(%{total_revenue: total_revenue} = params)
        when is_binary(total_revenue) do
-    total_revenue = Decimal.new(Regex.replace(~r/^[^\d]+/, total_revenue, ""))
+    total_revenue =
+      total_revenue
+      |> String.replace(~r/^[^\d]+/, "")
+      |> String.replace(",", "")
+      |> Decimal.new()
+
     Map.put(params, :total_revenue, total_revenue)
   end
 
