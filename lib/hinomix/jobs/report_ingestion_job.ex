@@ -12,9 +12,10 @@ defmodule Hinomix.Jobs.ReportIngestionJob do
   require Logger
 
   @impl Oban.Worker
-  def perform(%Oban.Job{args: args}) do
+  def perform(%Oban.Job{args: _args}) do
     Reports.delete_reports()
-    max_pages = Map.get(args, "max_pages", 7)
+    # max_pages = Map.get(args, "max_pages", 7)
+    max_pages = Hinomix.Servers.Cache.get_state("max_pages") || 7
 
     Logger.info("Starting report ingestion for #{max_pages} pages")
 

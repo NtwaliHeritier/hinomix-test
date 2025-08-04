@@ -29,6 +29,8 @@ defmodule Hinomix.Application do
     Hinomix.Jobs.ReportIngestionJob.new(%{})
     |> Oban.insert()
 
+    Hinomix.Servers.Cache.update_state("max_pages", 7)
+
     result
   end
 

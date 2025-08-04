@@ -67,6 +67,8 @@ defmodule HinomixWeb.ReportsLive do
           |> Oban.insert()
 
           Process.send_after(self(), {:refresh, page_number}, :timer.seconds(1))
+          Hinomix.Servers.Cache.update_state("max_pages", String.to_integer(page_number))
+
           nil
 
         reports ->
